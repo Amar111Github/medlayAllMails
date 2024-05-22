@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
@@ -30,8 +28,81 @@ transporter.verify((error) => {
   }
 });
 
+app.post('/api/career', upload.single("resume"), (req, res) => {
+  const { firstname, lastname, email, mobile, gender, position } = req.body;
+  const resume = req.file;
+  const mail = {
+    to: process.env.EMAIL_USER,
+    from: req.body.email,
+    
+    subject: 'Madley international Website Career Form Submission',
+    html: `
+      <p>Firstname: ${firstname}</p>
+      <p>Lastname: ${lastname}</p>
+      <p>Email: ${email}</p>
+      <p>Mobile: ${mobile}</p>
+      <p>Gender: ${gender}</p>
+      <p>Position: ${position}</p>`,
+      attachments: [
+        {
+          filename: "resume.pdf", // Change the filename as needed
+          content: resume.buffer,
+        },
+        // {
+        //   filename: "resume.txt", // Change the filename as needed
+        //   content: resume.buffer,
+        // },
+        // {
+        //   filename: "resume.jpg", // Change the filename as needed
+        //   content: resume.buffer,
+        // },
+        // {
+        //   filename: "resume.png", // Change the filename as needed
+        //   content: resume.buffer,
+        // },
+        // {
+        //   filename: "resume.doc", // Change the filename as needed
+        //   content: resume.buffer,
+        // },
+      ],
+  };
+  transporter.sendMail(mail, (error) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ status: 'ERROR' });
+    } else {
+      res.json({ status: 'Message Sent' });
+    }
+  });
+});
 
 app.post('/api/contact', (req, res) => {
+  const { firstname, lastname,email, mobile, requirement, message } = req.body;
+
+  const mail = {
+    from: req.body.email,
+    to: process.env.EMAIL_USER,  
+    subject: 'Madley international Website Contact Form Submission',
+    html: `
+    <p>Firstname: ${firstname}</p>
+    <p>Lastname: ${lastname}</p>
+      <p>Email: ${email}</p>
+      <p>Mobile: ${mobile}</p>
+      <p>Requirement: ${requirement}</p>
+      <p>Message: ${message}</p>`,
+  };
+
+  transporter.sendMail(mail, (error) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ status: 'ERROR' });
+    } else {
+      res.json({ status: 'Message Sent' });
+    }
+  });
+});
+
+app.post('/api/unsubscribe', (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ status: 'ERROR', message: 'Email address is required.' });
@@ -52,7 +123,6 @@ app.post('/api/contact', (req, res) => {
     res.json({ status: 'SUCCESS', message: 'Unsubscribed Successfully.', info: info.response });
   });
 });
-
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
